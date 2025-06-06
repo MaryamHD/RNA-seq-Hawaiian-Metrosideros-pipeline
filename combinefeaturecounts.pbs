@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -N combine_featurecounts
+#PBS -l walltime=01:00:00
+#PBS -l nodes=1:ppn=4
+#PBS -j oe
+
+# Load Python module (if required)
+module load conda
+conda activate myenv
+
+# Move to the directory where the script is located
+cd /storage/stacylab/WaterStudyRNAseq/readCounts/updatedAlignmentcorrectGTF
+
+# Run the Python script
+python3 combine_featurecounts.py
+

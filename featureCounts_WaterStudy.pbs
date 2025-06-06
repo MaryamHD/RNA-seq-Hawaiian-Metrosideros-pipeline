@@ -1,0 +1,38 @@
+#!/bin/bash
+
+#PBS -N featureCounts_WaterStudy
+#PBS -l select=1:mem=96gb:ncpus=4
+#PBS -l walltime=180:00:00
+#PBS -j oe
+#PBS -o $PBS_O_WORKDIR/updatedAlignmentcorrectGTF.log
+
+cd $PBS_O_WORKDIR
+
+# Load conda environment
+module load conda
+conda activate myenv
+
+# Define paths
+BAM_DIR="/storage/stacylab/WaterStudyRNAseq/star_alignment_results"
+GTF_FILE="/storage/stacylab/WaterStudyRNAseq/star_genome_dir/Metrosideros_polymrpha_incana.scaffolded.gtf"
+OUTPUT_DIR="/storage/stacylab/WaterStudyRNAseq/readCounts/updatedAlignmentcorrectGTF"
+LOG_DIR="/storage/stacylab/readCounts/logs/updatedAlignmentcorrectGTF"
+
+# Create output and log directories
+mkdir -p "$OUTPUT_DIR"
+mkdir -p "$LOG_DIR"
+
+# Run featureCounts on each BAM file
+for BAM_FILE in "$BAM_DIR"/*.Aligned.sortedByCoord.out.bam; do
+    SAMPLE_NAME=$(basename "$BAM_FILE" .Aligned.sortedByCoord.out.bam)
+    OUTPUT_FILE="${OUTPUT_DIR}/${SAMPLE_NAME}_featurecounts_updatedAlignmentcorrect.txt"
+    LOG_FILE="${LOG_DIR}/${SAMPLE_NAME}_featurecounts.log"
+
+    echo "Processing sample: $SAMPLE_NAME"
+
+    featureCounts -T 4 -s 2 -M --fraction -p -O -t exon -g gene_id \
+        -a "$GTF_FILE" -o "$OUTPUT_FILE" "$BAM_FILE" 2> "$LOG_FILE"
+done
+
+exit 0
+
