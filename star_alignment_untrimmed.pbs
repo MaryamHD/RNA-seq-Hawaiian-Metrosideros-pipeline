@@ -1,0 +1,43 @@
+#!/bin/bash
+
+#PBS -N STAR_Alignment_Untrimmed
+#PBS -l select=1:mem=96gb:ncpus=8
+#PBS -l walltime=180:00:00
+#PBS -j oe
+#PBS -o $PBS_O_WORKDIR/STAR_Alignment_Untrimmed.log
+
+
+cd $PBS_O_WORKDIR
+
+module load conda
+conda activate myenv
+
+GENOME_DIR=/storage/stacylab/WaterStudyRNAseq/star_genome_dir/star_index
+OUTPUT_DIR=/storage/stacylab/WaterStudyRNAseq/star_alignment_results
+
+
+# Loop through all sample directories
+for sample in S{1..72}; do
+    # Skip samples S2, S9, and S65
+    if [[ "$sample" == "S2" || "$sample" == "S9" || "$sample" == "S65" ]]; then
+        continue
+    fi
+
+    # Define paths for the FASTQ files
+    R1=/storage/stacylab/WaterStudyRNAseq/merged_fastq_files/$sample/${sample}_merged_R1.fastq.gz
+    R2=/storage/stacylab/WaterStudyRNAseq/merged_fastq_files/$sample/${sample}_merged_R2.fastq.gz
+
+    # Run STAR alignment
+    STAR --runThreadN 8 \
+         --genomeDir $GENOME_DIR \
+         --readFilesIn $R1 $R2 \
+         --readFilesCommand zcat \
+         --outFileNamePrefix $OUTPUT_DIR/$sample. \
+         --outSAMtype BAM SortedByCoordinate \
+         --outFilterMultimapNmax 20 \
+         --twopassMode Basic
+
+done
+
+exit 0
+
